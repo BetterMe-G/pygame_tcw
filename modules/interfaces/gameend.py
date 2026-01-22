@@ -6,15 +6,15 @@ import pygame
 '''游戏结束界面'''
 def GameEndInterface(screen, cfg):
     replay_image = pygame.image.load(cfg.IMAGE_PATHS['replay'])
-    replay_image = pygame.transform.scale(replay_image, (35, 31))
+    replay_image = pygame.transform.scale(replay_image, (80, 70))
     replay_image_rect = replay_image.get_rect()
     replay_image_rect.centerx = cfg.SCREENSIZE[0] / 2
     replay_image_rect.top = cfg.SCREENSIZE[1] * 0.52
     gameover_image = pygame.image.load(cfg.IMAGE_PATHS['gameover'])
-    gameover_image = pygame.transform.scale(gameover_image, (190, 11))
+    gameover_image = pygame.transform.scale(gameover_image, (380, 22))
     gameover_image_rect = gameover_image.get_rect()
     gameover_image_rect.centerx = cfg.SCREENSIZE[0] / 2
-    gameover_image_rect.centery = cfg.SCREENSIZE[1] * 0.35
+    gameover_image_rect.centery = cfg.SCREENSIZE[1] * 0.45
     clock = pygame.time.Clock()
     while True:
         for event in pygame.event.get():

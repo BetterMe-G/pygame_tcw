@@ -1,10 +1,8 @@
-
 import pygame
-
 
 '''地板'''
 class Ground(pygame.sprite.Sprite):
-    def __init__(self, imagepath, position, **kwargs):
+    def __init__(self, imagepath, position, speed=-5, **kwargs):
         pygame.sprite.Sprite.__init__(self)
         # 导入图片
         self.image_0 = pygame.image.load(imagepath)
@@ -14,15 +12,23 @@ class Ground(pygame.sprite.Sprite):
         self.rect_1 = self.image_1.get_rect()
         self.rect_1.left, self.rect_1.bottom = self.rect_0.right, self.rect_0.bottom
         # 定义一些必要的参数
-        self.speed = -10
+        self.speed = speed
     '''更新地板'''
     def update(self):
         self.rect_0.left += self.speed
         self.rect_1.left += self.speed
-        if self.rect_0.right < 0:
+        # 改进的衔接逻辑
+        if self.rect_0.right <= 0:
             self.rect_0.left = self.rect_1.right
-        if self.rect_1.right < 0:
+        if self.rect_1.right <= 0:
             self.rect_1.left = self.rect_0.right
+        
+        # 确保地板始终覆盖整个屏幕底部
+        if self.rect_0.right < 600 and self.rect_1.right < 600:
+            if self.rect_0.right > self.rect_1.right:
+                self.rect_1.left = self.rect_0.right
+            else:
+                self.rect_0.left = self.rect_1.right
     '''将地板画到屏幕'''
     def draw(self, screen):
         screen.blit(self.image_0, self.rect_0)
@@ -51,7 +57,7 @@ class Cloud(pygame.sprite.Sprite):
 
 '''记分板'''
 class Scoreboard(pygame.sprite.Sprite):
-    def __init__(self, imagepath, position, size=(11, 13), is_highest=False, bg_color=None, **kwargs):
+    def __init__(self, imagepath, position, size=(15, 20), is_highest=False, bg_color=None, **kwargs):
         pygame.sprite.Sprite.__init__(self)
         # 导入图片
         self.images = []
@@ -59,9 +65,9 @@ class Scoreboard(pygame.sprite.Sprite):
         for i in range(12):
             self.images.append(pygame.transform.scale(image.subsurface((i*20, 0), (20, 24)), size))
         if is_highest:
-            self.image = pygame.Surface((size[0]*8, size[1]))
+            self.image = pygame.Surface((size[0]*8, size[1]), pygame.SRCALPHA)
         else:
-            self.image = pygame.Surface((size[0]*5, size[1]))
+            self.image = pygame.Surface((size[0]*5, size[1]), pygame.SRCALPHA)
         self.rect = self.image.get_rect()
         self.rect.left, self.rect.top = position
         # 一些必要的变量
@@ -73,7 +79,54 @@ class Scoreboard(pygame.sprite.Sprite):
         self.score = str(score).zfill(5)
     '''画到屏幕上'''
     def draw(self, screen):
-        self.image.fill(self.bg_color)
+        if self.bg_color is not None:
+            # 如果指定了背景色，使用该颜色
+            self.image.fill(self.bg_color)
+        else:
+            # 如果bg_color是None，填充完全透明
+            self.image.fill((0, 0, 0, 0))  # RGBA，A=0表示完全透明
+
+        for idx, digital in enumerate(list(self.score)):
+            digital_image = self.images[int(digital)]
+            if self.is_highest:
+                self.image.blit(digital_image, ((idx+3)*digital_image.get_rect().width, 0))
+            else:
+                self.image.blit(digital_image, (idx*digital_image.get_rect().width, 0))
+        if self.is_highest:
+            self.image.blit(self.images[-2], (0, 0))
+            self.image.blit(self.images[-1], (digital_image.get_rect().width, 0))
+        screen.blit(self.image, self.rect)
+
+class Countboard(pygame.sprite.Sprite):
+    def __init__(self, imagepath, position, size=(15, 20), is_highest=False, bg_color=None, **kwargs):
+        pygame.sprite.Sprite.__init__(self)
+        # 导入图片
+        self.images = []
+        image = pygame.image.load(imagepath)
+        for i in range(12):
+            self.images.append(pygame.transform.scale(image.subsurface((i*20, 0), (20, 24)), size))
+        if is_highest:
+            self.image = pygame.Surface((size[0]*8, size[1]), pygame.SRCALPHA)
+        else:
+            self.image = pygame.Surface((size[0]*5, size[1]), pygame.SRCALPHA)
+        self.rect = self.image.get_rect()
+        self.rect.left, self.rect.top = position
+        # 一些必要的变量
+        self.is_highest = is_highest
+        self.bg_color = bg_color
+        self.score = '000'
+    '''设置得分'''
+    def set(self, score):
+        self.score = str(score).zfill(3)
+    '''画到屏幕上'''
+    def draw(self, screen):
+        if self.bg_color is not None:
+            # 如果指定了背景色，使用该颜色
+            self.image.fill(self.bg_color)
+        else:
+            # 如果bg_color是None，填充完全透明
+            self.image.fill((0, 0, 0, 0))  # RGBA，A=0表示完全透明
+
         for idx, digital in enumerate(list(self.score)):
             digital_image = self.images[int(digital)]
             if self.is_highest:
